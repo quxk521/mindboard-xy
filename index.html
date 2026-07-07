@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data: file: blob:; style-src 'self' 'unsafe-inline'; script-src 'self';"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f3ee" />
+    <title>MindBoard</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/mindboard.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./src/styles.css" />
+    <script defer src="./src/main.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="boardCanvas" aria-label="MindBoard canvas"></canvas>
+
+      <aside class="rail" aria-label="工具栏">
+        <button class="tool-button active" data-action="select" title="选择">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l12 10-6 1.5L8 21 5 3z" /></svg>
+        </button>
+        <button class="tool-button" data-action="text" title="添加文本">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M12 5v14M8 19h8" /></svg>
+        </button>
+        <button class="tool-button" data-action="image" title="添加图片">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" /><path d="M7 16l4-4 3 3 2-2 3 3M8 9h.01" /></svg>
+        </button>
+        <button class="tool-button" data-action="link" title="添加网页卡片">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" /></svg>
+        </button>
+        <button class="tool-button" data-action="group" title="从选择创建分组">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" stroke-dasharray="3 3" /><path d="M9 9h6v6H9z" /></svg>
+        </button>
+        <span class="rail-separator"></span>
+        <button class="tool-button enabled" data-action="toggle-grid" title="隐藏网格" aria-pressed="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16M8 4v16M16 4v16" /></svg>
+        </button>
+        <button class="tool-button" data-action="crop" title="裁剪图片">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v14h14M3 7h14v14M7 7h10v10" /></svg>
+        </button>
+        <button class="tool-button" data-action="duplicate" title="复制节点">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" /></svg>
+        </button>
+        <button class="tool-button danger" data-action="delete" title="删除">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" /></svg>
+        </button>
+      </aside>
+
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <span>MindBoard</span>
+        </div>
+        <div class="top-actions">
+          <button class="pill-button" data-action="undo" title="撤销 Ctrl+Z" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-1" /></svg>
+          </button>
+          <button class="pill-button" data-action="redo" title="重做 Ctrl+Y" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5M20 9H10a6 6 0 0 0 0 12h1" /></svg>
+          </button>
+          <span class="top-separator"></span>
+          <button class="pill-button" data-action="zoom-out" title="缩小">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>
+          </button>
+          <button class="zoom-readout" data-action="zoom-reset" title="重置缩放">100%</button>
+          <button class="pill-button" data-action="zoom-in" title="放大">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+          <button class="pill-button" data-action="fit" title="适应内容">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
+          </button>
+          <span class="top-separator"></span>
+          <button class="pill-button" data-action="import" title="导入 mindboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16V8h-7l-2-3H4zM12 11v6M9 14l3 3 3-3" /></svg>
+          </button>
+          <button class="pill-button" data-action="export" title="导出 mindboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M12 4v10M8 10l4 4 4-4" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="inspector" aria-label="检查器">
+        <div class="inspector-empty">选择节点后可调颜色、尺寸和裁剪</div>
+        <div class="inspector-content node-inspector hidden">
+          <div class="panel-title">节点</div>
+          <label class="field">
+            <span>宽</span>
+            <input data-inspector="width" type="number" min="80" step="10" />
+          </label>
+          <label class="field">
+            <span>高</span>
+            <input data-inspector="height" type="number" min="56" step="10" />
+          </label>
+          <div class="swatch-label">背景</div>
+          <div class="swatches" aria-label="背景颜色">
+            <button data-color="#fffdf8" style="--swatch: #fffdf8" title="纸白"></button>
+            <button data-color="#e9f3ff" style="--swatch: #e9f3ff" title="蓝"></button>
+            <button data-color="#e9f8ef" style="--swatch: #e9f8ef" title="绿"></button>
+            <button data-color="#fff1cc" style="--swatch: #fff1cc" title="黄"></button>
+            <button data-color="#fdecef" style="--swatch: #fdecef" title="红"></button>
+            <button data-color="#f0edff" style="--swatch: #f0edff" title="紫"></button>
+          </div>
+          <div class="swatch-label">文字</div>
+          <div class="swatches" aria-label="文字颜色">
+            <button data-text-color="#26231f" style="--swatch: #26231f" title="深色"></button>
+            <button data-text-color="#5e5a51" style="--swatch: #5e5a51" title="灰色"></button>
+            <button data-text-color="#0f7887" style="--swatch: #0f7887" title="青色"></button>
+            <button data-text-color="#7ba86d" style="--swatch: #7ba86d" title="绿色"></button>
+            <button data-text-color="#ad7c19" style="--swatch: #ad7c19" title="黄色"></button>
+            <button data-text-color="#a12834" style="--swatch: #a12834" title="红色"></button>
+          </div>
+          <div class="crop-panel hidden">
+            <div class="panel-title">裁剪</div>
+            <p class="crop-help">点击左侧裁剪按钮后，拖动图片边框或角点裁剪。</p>
+            <button class="wide-button" data-action="reset-crop">重置裁剪</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="jump-panel" aria-label="区域跳转">
+        <div class="jump-header">
+          <span>区域</span>
+          <div class="jump-actions">
+            <button class="jump-bind" data-jump-action="bind" title="用最近一次框选区域绑定跳转格">绑定</button>
+            <button class="jump-clear" data-jump-action="clear" title="取消一个已绑定的跳转格">清除</button>
+          </div>
+        </div>
+        <div class="jump-grid">
+          <button data-jump-slot="nw" title="左上">↖</button>
+          <button data-jump-slot="n" title="上">↑</button>
+          <button data-jump-slot="ne" title="右上">↗</button>
+          <button data-jump-slot="w" title="左">←</button>
+          <button data-jump-slot="c" title="中心">•</button>
+          <button data-jump-slot="e" title="右">→</button>
+          <button data-jump-slot="sw" title="左下">↙</button>
+          <button data-jump-slot="s" title="下">↓</button>
+          <button data-jump-slot="se" title="右下">↘</button>
+        </div>
+      </section>
+
+      <input id="imagePicker" class="hidden" type="file" accept="image/*" multiple />
+      <input id="boardPicker" class="hidden" type="file" accept=".mindboard,application/json" />
+      <textarea id="inlineEditor" spellcheck="false"></textarea>
+      <textarea id="edgeLabelEditor" class="edge-label-editor" spellcheck="false"></textarea>
+      <div id="contextMenu" class="context-menu hidden"></div>
+      <div id="toast" class="toast hidden"></div>
+    </div>
+  </body>
+</html>

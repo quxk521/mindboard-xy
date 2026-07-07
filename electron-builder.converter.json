@@ -1,0 +1,30 @@
+{
+  "appId": "com.mindboard.canvasconverter",
+  "productName": "Canvas Converter",
+  "asar": true,
+  "compression": "normal",
+  "directories": {
+    "output": "dist-converter"
+  },
+  "extraMetadata": {
+    "main": "electron/converter-main.cjs"
+  },
+  "files": [
+    "converter.html",
+    "electron/converter-main.cjs",
+    "electron/converter-preload.cjs",
+    "src/converter.css",
+    "src/converter.js",
+    "scripts/convert-obsidian-canvas.mjs",
+    "package.json"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "artifactName": "CanvasConverter-${version}-portable-${arch}.${ext}"
+  }
+}

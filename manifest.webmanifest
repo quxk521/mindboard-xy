@@ -1,0 +1,18 @@
+{
+  "name": "MindBoard",
+  "short_name": "MindBoard",
+  "description": "Infinite canvas notes with mind-map style nodes, images, links, groups, and local-first storage.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f3ee",
+  "theme_color": "#f5f3ee",
+  "icons": [
+    {
+      "src": "./icons/mindboard.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

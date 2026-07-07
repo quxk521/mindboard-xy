@@ -1,0 +1,47 @@
+{
+  "name": "mindboard-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron infinite canvas note app inspired by Obsidian Canvas.",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "dev": "electron .",
+    "start": "electron .",
+    "converter:dev": "electron electron/converter-main.cjs",
+    "convert:obsidian": "node scripts/convert-obsidian-canvas.mjs",
+    "build:converter:portable": "electron-builder --config electron-builder.converter.json --win portable",
+    "build:portable": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.mindboard.desktop",
+    "productName": "MindBoard",
+    "asar": true,
+    "compression": "maximum",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "electron/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "MindBoard-${version}-portable-${arch}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^26.15.3"
+  }
+}
