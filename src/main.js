@@ -35,10 +35,6 @@ const WEB_DB_NAME = "mindboard-web";
 const WEB_DB_VERSION = 1;
 const WEB_BOARD_STORE = "boards";
 const WEB_BOARD_KEY = "default";
-const DEFAULT_BOARD_URLS = [
-  "https://raw.githubusercontent.com/quxk521/mindboard-xy/master/0%E5%8D%97%E5%A4%A7%E7%A2%8E%E5%B0%B8%E6%A1%88.mindboard",
-  "./0南大碎尸案.mindboard"
-];
 const JUMP_SLOTS = ["nw", "n", "ne", "w", "c", "e", "sw", "s", "se"];
 
 const colors = {
@@ -67,6 +63,8 @@ const state = {
   hoverCrop: undefined,
   hoverEdge: undefined,
   pointer: undefined,
+  touchPoints: new Map(),
+  touchGesture: undefined,
   editingNode: undefined,
   editingEdge: undefined,
   saveTimer: undefined,
@@ -84,10 +82,6 @@ let webDbPromise;
 
 function emptyBoard() {
   return { version: 2, view: { x: 0, y: 0, scale: 1, gridVisible: true }, nodes: [], edges: [], groups: [], jumpAreas: {} };
-}
-
-function hasBoardContent(board) {
-  return Boolean(board?.nodes?.length || board?.edges?.length || board?.groups?.length);
 }
 
 function idbRequest(request) {
@@ -120,28 +114,13 @@ function openWebDb() {
 }
 
 async function loadWebBoard() {
-  for (const boardUrl of DEFAULT_BOARD_URLS) {
-    try {
-      const response = await fetch(boardUrl, { cache: "no-store" });
-      if (response.ok) return response.json();
-      console.warn(`Default board ${boardUrl} returned ${response.status}.`);
-    } catch (error) {
-      console.warn(`Could not load the default board from ${boardUrl}.`, error);
-    }
-  }
-
-  console.warn("Could not load the default board; falling back to browser storage.");
   const db = await openWebDb();
   if (db) {
     const board = await idbRequest(db.transaction(WEB_BOARD_STORE, "readonly").objectStore(WEB_BOARD_STORE).get(WEB_BOARD_KEY));
-    if (hasBoardContent(board)) return board;
+    if (board) return board;
   }
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    const board = JSON.parse(raw);
-    if (hasBoardContent(board)) return board;
-  }
-  return emptyBoard();
+  return raw ? JSON.parse(raw) : emptyBoard();
 }
 
 async function saveWebBoard(board) {
@@ -467,6 +446,74 @@ function worldToScreen(point) {
 function screenPoint(event) {
   const rect = canvas.getBoundingClientRect();
   return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
+
+function trackTouchPoint(event) {
+  if (event.pointerType !== "touch") return;
+  state.touchPoints.set(event.pointerId, screenPoint(event));
+}
+
+function forgetTouchPoint(event) {
+  if (event.pointerType !== "touch") return;
+  state.touchPoints.delete(event.pointerId);
+  if (state.touchPoints.size < 2) state.touchGesture = undefined;
+}
+
+function touchPair() {
+  const points = [...state.touchPoints.values()];
+  if (points.length < 2) return undefined;
+  return [points[0], points[1]];
+}
+
+function touchCenter(a, b) {
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+}
+
+function touchDistance(a, b) {
+  return Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+}
+
+function beginTouchGesture() {
+  const pair = touchPair();
+  if (!pair) return false;
+  const [a, b] = pair;
+  const center = touchCenter(a, b);
+  state.pointer = undefined;
+  state.touchGesture = {
+    startDistance: touchDistance(a, b),
+    startCenter: center,
+    startScale: state.board.view.scale,
+    startView: { ...state.board.view },
+    centerWorld: screenToWorld(center)
+  };
+  state.hoverHandle = undefined;
+  state.hoverCrop = undefined;
+  return true;
+}
+
+function updateTouchGesture() {
+  if (!state.touchGesture) return false;
+  const pair = touchPair();
+  if (!pair) return false;
+  const [a, b] = pair;
+  const center = touchCenter(a, b);
+  const distance = touchDistance(a, b);
+  const nextScale = clamp(
+    state.touchGesture.startScale * (distance / state.touchGesture.startDistance),
+    0.12,
+    3.5
+  );
+  state.board.view.scale = nextScale;
+  state.board.view.x = center.x - state.touchGesture.centerWorld.x * nextScale;
+  state.board.view.y = center.y - state.touchGesture.centerWorld.y * nextScale;
+  updateZoomReadout();
+  scheduleSave();
+  queueRedraw();
+  return true;
+}
+
+function shouldPanWithTouch(hit) {
+  return hit.type === "none" || hit.type === "edge" || hit.type === "group";
 }
 
 function nodeCenter(node) {
@@ -1602,9 +1649,24 @@ function pointToSegmentDistance(point, a, b) {
 
 function handlePointerDown(event) {
   hideContextMenu();
+  trackTouchPoint(event);
   const screen = screenPoint(event);
   const world = screenToWorld(screen);
   state.pointerWorld = world;
+
+  try {
+    canvas.setPointerCapture(event.pointerId);
+  } catch {
+    // Some mobile browsers may already have released the pointer.
+  }
+
+  if (event.pointerType === "touch" && state.touchPoints.size >= 2) {
+    event.preventDefault();
+    finishEditing(true);
+    finishEdgeLabelEditing(true);
+    beginTouchGesture();
+    return;
+  }
 
   if (event.button === 0 && event.detail >= 2) {
     const edge = hitEdge(world, EDGE_LABEL_HIT_TOLERANCE_PX);
@@ -1619,7 +1681,6 @@ function handlePointerDown(event) {
 
   finishEditing(true);
   finishEdgeLabelEditing(true);
-  canvas.setPointerCapture(event.pointerId);
 
   if (event.button === 1 || event.button === 2 || state.spaceDown) {
     state.pointer = { type: "pan", startScreen: screen, startView: { ...state.board.view } };
@@ -1638,6 +1699,11 @@ function handlePointerDown(event) {
   }
 
   const hit = hitTest(world);
+  if (event.pointerType === "touch" && shouldPanWithTouch(hit)) {
+    state.pointer = { type: "pan", startScreen: screen, startView: { ...state.board.view } };
+    if (hit.type === "edge") selectOnlyEdge(hit.edge.id);
+    return;
+  }
   if (hit.type === "crop") {
     state.pointer = {
       type: "crop-image",
@@ -1744,6 +1810,8 @@ function handlePointerDown(event) {
 }
 
 function handlePointerMove(event) {
+  trackTouchPoint(event);
+  if (event.pointerType === "touch" && updateTouchGesture()) return;
   const screen = screenPoint(event);
   const world = screenToWorld(screen);
   state.pointerWorld = world;
@@ -1877,6 +1945,14 @@ function handlePointerMove(event) {
 function handlePointerUp(event) {
   const screen = screenPoint(event);
   const world = screenToWorld(screen);
+  const wasTouchGesture = event.pointerType === "touch" && state.touchGesture;
+  forgetTouchPoint(event);
+  if (wasTouchGesture) {
+    state.pointer = undefined;
+    scheduleSave();
+    queueRedraw();
+    return;
+  }
   const pointer = state.pointer;
   state.pointer = undefined;
   if (!pointer) return;
@@ -2503,10 +2579,12 @@ async function pasteClipboard() {
 }
 
 function updateInspector() {
+  const inspector = document.querySelector(".inspector");
   const empty = document.querySelector(".inspector-empty");
   const nodeContent = document.querySelector(".node-inspector");
   const selected = [...state.selectedNodes].map(getNode).filter(Boolean);
   const hasNode = selected.length > 0;
+  inspector?.classList.toggle("has-selection", hasNode);
   empty.classList.toggle("hidden", hasNode);
   nodeContent.classList.toggle("hidden", !hasNode);
   if (!hasNode) return;

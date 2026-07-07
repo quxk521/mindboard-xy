@@ -1,12 +1,11 @@
-const CACHE_NAME = "mindboard-web-v2";
+const CACHE_NAME = "mindboard-web-v1";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./src/main.js",
   "./src/styles.css",
   "./manifest.webmanifest",
-  "./icons/mindboard.svg",
-  "./0南大碎尸案.mindboard"
+  "./icons/mindboard.svg"
 ];
 
 self.addEventListener("install", (event) => {

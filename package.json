@@ -24,7 +24,6 @@
     },
     "files": [
       "index.html",
-      "0南大碎尸案.mindboard",
       "electron/**/*",
       "src/**/*",
       "package.json"
