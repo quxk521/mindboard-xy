@@ -1720,7 +1720,10 @@ function handlePointerDown(event) {
     return;
   }
 
-  const hit = hitTest(world);
+  let hit = hitTest(world);
+  if (event.pointerType === "touch" && hit.type === "handle" && !state.selectedNodes.has(hit.node.id)) {
+    hit = { type: "node", node: hit.node };
+  }
   if (event.pointerType === "touch" && shouldPanWithTouch(hit)) {
     state.pointer = {
       type: "pan",
