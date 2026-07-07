@@ -675,9 +675,10 @@ textarea {
     right: 10px;
     bottom: calc(max(10px, env(safe-area-inset-bottom)) + 68px);
     width: auto;
-    max-height: min(48vh, 360px);
-    padding: 12px;
+    max-height: min(28vh, 230px);
+    padding: 9px 10px 10px;
     overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .inspector:not(.has-selection) {
@@ -688,28 +689,70 @@ textarea {
     display: none;
   }
 
+  .node-inspector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 10px;
+    align-items: start;
+  }
+
+  .node-inspector.hidden {
+    display: none !important;
+  }
+
+  .node-inspector .panel-title {
+    grid-column: 1 / -1;
+    margin-bottom: 5px;
+    font-size: 11px;
+  }
+
   .field {
-    grid-template-columns: 30px 1fr;
-    gap: 8px;
-    margin: 7px 0;
+    grid-template-columns: 24px 1fr;
+    gap: 6px;
+    margin: 4px 0;
+    font-size: 11px;
   }
 
   .field input[type="number"] {
-    height: 34px;
+    height: 28px;
+    padding: 0 7px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+
+  .swatch-label {
+    margin: 7px 0 5px;
+    font-size: 11px;
   }
 
   .swatches {
-    grid-template-columns: repeat(6, minmax(30px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(6, 22px);
+    gap: 5px;
+    align-items: center;
   }
 
   .swatches button {
-    width: 32px;
-    height: 32px;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+  }
+
+  .crop-panel {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .crop-help {
+    margin-bottom: 6px;
+    font-size: 11px;
+    line-height: 1.35;
   }
 
   .wide-button {
-    height: 38px;
+    height: 30px;
+    margin-top: 5px;
+    font-size: 12px;
   }
 
   #inlineEditor {
