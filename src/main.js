@@ -35,7 +35,10 @@ const WEB_DB_NAME = "mindboard-web";
 const WEB_DB_VERSION = 1;
 const WEB_BOARD_STORE = "boards";
 const WEB_BOARD_KEY = "default";
-const DEFAULT_BOARD_URL = "./0南大碎尸案.mindboard";
+const DEFAULT_BOARD_URLS = [
+  "https://raw.githubusercontent.com/quxk521/mindboard-xy/master/0%E5%8D%97%E5%A4%A7%E7%A2%8E%E5%B0%B8%E6%A1%88.mindboard",
+  "./0南大碎尸案.mindboard"
+];
 const JUMP_SLOTS = ["nw", "n", "ne", "w", "c", "e", "sw", "s", "se"];
 
 const colors = {
@@ -117,6 +120,17 @@ function openWebDb() {
 }
 
 async function loadWebBoard() {
+  for (const boardUrl of DEFAULT_BOARD_URLS) {
+    try {
+      const response = await fetch(boardUrl, { cache: "no-store" });
+      if (response.ok) return response.json();
+      console.warn(`Default board ${boardUrl} returned ${response.status}.`);
+    } catch (error) {
+      console.warn(`Could not load the default board from ${boardUrl}.`, error);
+    }
+  }
+
+  console.warn("Could not load the default board; falling back to browser storage.");
   const db = await openWebDb();
   if (db) {
     const board = await idbRequest(db.transaction(WEB_BOARD_STORE, "readonly").objectStore(WEB_BOARD_STORE).get(WEB_BOARD_KEY));
@@ -126,13 +140,6 @@ async function loadWebBoard() {
   if (raw) {
     const board = JSON.parse(raw);
     if (hasBoardContent(board)) return board;
-  }
-  try {
-    const response = await fetch(DEFAULT_BOARD_URL);
-    if (response.ok) return response.json();
-    console.warn(`Default board ${DEFAULT_BOARD_URL} returned ${response.status}.`);
-  } catch (error) {
-    console.warn("Could not load the default board; opening an empty board.", error);
   }
   return emptyBoard();
 }
