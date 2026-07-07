@@ -240,6 +240,10 @@ textarea {
   backdrop-filter: blur(18px);
 }
 
+.jump-toggle {
+  display: none;
+}
+
 .jump-header {
   display: flex;
   align-items: center;
@@ -343,6 +347,10 @@ textarea {
   font-size: 12px;
   font-weight: 760;
   color: #5e5a51;
+}
+
+.mobile-inspector-menu {
+  display: none;
 }
 
 .field {
@@ -637,8 +645,50 @@ textarea {
     right: 10px;
     bottom: auto;
     left: auto;
+    width: 44px;
+    padding: 0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .jump-panel.expanded {
     width: 126px;
     padding: 8px;
+    overflow: visible;
+  }
+
+  .jump-toggle {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 7px;
+    color: #0f5f6d;
+    background: rgba(255, 255, 255, 0.86);
+  }
+
+  .jump-toggle svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+  }
+
+  .jump-panel.expanded .jump-toggle {
+    width: 100%;
+    margin-bottom: 7px;
+    background: #dff3f4;
+  }
+
+  .jump-content {
+    display: none;
+  }
+
+  .jump-panel.expanded .jump-content {
+    display: block;
   }
 
   .jump-header {
@@ -675,8 +725,8 @@ textarea {
     right: 10px;
     bottom: calc(max(10px, env(safe-area-inset-bottom)) + 68px);
     width: auto;
-    max-height: min(28vh, 230px);
-    padding: 9px 10px 10px;
+    max-height: min(24vh, 184px);
+    padding: 8px;
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -690,10 +740,7 @@ textarea {
   }
 
   .node-inspector {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 10px;
-    align-items: start;
+    display: block;
   }
 
   .node-inspector.hidden {
@@ -701,20 +748,49 @@ textarea {
   }
 
   .node-inspector .panel-title {
-    grid-column: 1 / -1;
-    margin-bottom: 5px;
+    display: none;
+  }
+
+  .mobile-inspector-menu {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
     font-size: 11px;
+    margin-bottom: 7px;
+  }
+
+  .mobile-inspector-menu button {
+    height: 30px;
+    border: 0;
+    border-radius: 7px;
+    color: #5e5a51;
+    background: #f4f1ea;
+    font-size: 12px;
+    font-weight: 680;
+  }
+
+  .mobile-inspector-menu button.active {
+    color: #0f5f6d;
+    background: #dff3f4;
+  }
+
+  .inspector-section {
+    display: none;
+  }
+
+  .inspector-section.active {
+    display: block;
   }
 
   .field {
-    grid-template-columns: 24px 1fr;
+    grid-template-columns: 28px 1fr;
     gap: 6px;
-    margin: 4px 0;
+    margin: 5px 0;
     font-size: 11px;
   }
 
   .field input[type="number"] {
-    height: 28px;
+    height: 32px;
     padding: 0 7px;
     border-radius: 6px;
     font-size: 12px;
@@ -726,21 +802,21 @@ textarea {
   }
 
   .swatches {
-    grid-template-columns: repeat(6, 22px);
-    gap: 5px;
+    grid-template-columns: repeat(6, minmax(28px, 1fr));
+    gap: 7px;
     align-items: center;
   }
 
   .swatches button {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     border-radius: 6px;
   }
 
   .crop-panel {
-    grid-column: 1 / -1;
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
   }
 
   .crop-help {
@@ -790,7 +866,7 @@ textarea {
     justify-content: flex-start;
   }
 
-  .jump-panel {
+  .jump-panel.expanded {
     width: 118px;
   }
 

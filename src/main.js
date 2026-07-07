@@ -14,6 +14,7 @@ const EDGE_HIT_TOLERANCE_PX = 22;
 const EDGE_LABEL_HIT_TOLERANCE_PX = 30;
 const CONNECT_SNAP_RADIUS = 34;
 const CONNECT_DRAG_START_PX = 12;
+const TOUCH_TAP_MOVE_PX = 8;
 const MIN_NODE_W = 96;
 const MIN_NODE_H = 48;
 const DEFAULT_TEXT_NODE_W = 168;
@@ -55,7 +56,9 @@ const state = {
   selectedNodes: new Set(),
   selectedEdges: new Set(),
   selectedGroups: new Set(),
+  mobileInspectorPanel: "size",
   lastJumpSelection: undefined,
+  jumpPanelOpen: false,
   bindingJumpArea: false,
   clearingJumpArea: false,
   hoverNode: undefined,
@@ -1700,7 +1703,13 @@ function handlePointerDown(event) {
 
   const hit = hitTest(world);
   if (event.pointerType === "touch" && shouldPanWithTouch(hit)) {
-    state.pointer = { type: "pan", startScreen: screen, startView: { ...state.board.view } };
+    state.pointer = {
+      type: "pan",
+      startScreen: screen,
+      startView: { ...state.board.view },
+      touchHitType: hit.type,
+      moved: false
+    };
     if (hit.type === "edge") selectOnlyEdge(hit.edge.id);
     return;
   }
@@ -1830,6 +1839,10 @@ function handlePointerMove(event) {
   }
 
   if (state.pointer.type === "pan") {
+    if (event.pointerType === "touch") {
+      const moved = Math.hypot(screen.x - state.pointer.startScreen.x, screen.y - state.pointer.startScreen.y);
+      state.pointer.moved = state.pointer.moved || moved > TOUCH_TAP_MOVE_PX;
+    }
     state.board.view.x = state.pointer.startView.x + (screen.x - state.pointer.startScreen.x);
     state.board.view.y = state.pointer.startView.y + (screen.y - state.pointer.startScreen.y);
     queueRedraw();
@@ -1956,6 +1969,17 @@ function handlePointerUp(event) {
   const pointer = state.pointer;
   state.pointer = undefined;
   if (!pointer) return;
+
+  if (pointer.type === "pan" && event.pointerType === "touch") {
+    const moved = Math.hypot(screen.x - pointer.startScreen.x, screen.y - pointer.startScreen.y);
+    if ((pointer.touchHitType === "none" || pointer.touchHitType === "group") && !pointer.moved && moved <= TOUCH_TAP_MOVE_PX) {
+      clearSelection();
+      exitJumpModes();
+      updateJumpPanel();
+      queueRedraw();
+      return;
+    }
+  }
 
   if (pointer.type === "connect") {
     if (!pointer.dragged) {
@@ -2244,6 +2268,7 @@ function setJumpBindingMode(enabled) {
     return;
   }
   state.bindingJumpArea = enabled;
+  if (enabled) state.jumpPanelOpen = true;
   if (enabled) state.clearingJumpArea = false;
   updateJumpPanel();
   queueRedraw();
@@ -2251,9 +2276,15 @@ function setJumpBindingMode(enabled) {
 
 function setJumpClearingMode(enabled) {
   state.clearingJumpArea = enabled;
+  if (enabled) state.jumpPanelOpen = true;
   if (enabled) state.bindingJumpArea = false;
   updateJumpPanel();
   queueRedraw();
+}
+
+function setJumpPanelOpen(open) {
+  state.jumpPanelOpen = open;
+  updateJumpPanel();
 }
 
 function bindJumpArea(slot) {
@@ -2266,6 +2297,7 @@ function bindJumpArea(slot) {
   recordHistory();
   state.board.jumpAreas[slot] = { ...area };
   state.lastJumpSelection = { ...area };
+  state.jumpPanelOpen = false;
   exitJumpModes();
   updateJumpPanel();
   scheduleSave();
@@ -2281,6 +2313,7 @@ function clearJumpArea(slot) {
   }
   recordHistory();
   delete state.board.jumpAreas[slot];
+  state.jumpPanelOpen = false;
   exitJumpModes();
   updateJumpPanel();
   scheduleSave();
@@ -2303,6 +2336,7 @@ function jumpToArea(slot) {
   }
   focusWorldRect(area);
   state.lastJumpSelection = { ...area };
+  state.jumpPanelOpen = false;
   updateJumpPanel();
   scheduleSave();
   queueRedraw();
@@ -2323,10 +2357,12 @@ function focusWorldRect(rect) {
 }
 
 function updateJumpPanel() {
+  const panel = document.querySelector(".jump-panel");
   const bindButton = document.querySelector("[data-jump-action='bind']");
   const clearButton = document.querySelector("[data-jump-action='clear']");
   const canBindArea = state.bindingJumpArea && usefulRect(currentBindableArea());
   const clearingMode = state.clearingJumpArea;
+  panel?.classList.toggle("expanded", state.jumpPanelOpen || state.bindingJumpArea || state.clearingJumpArea);
   bindButton?.classList.toggle("active", state.bindingJumpArea);
   clearButton?.classList.toggle("active", clearingMode);
   document.querySelectorAll("[data-jump-slot]").forEach((button) => {
@@ -2578,6 +2614,32 @@ async function pasteClipboard() {
   showToast("剪贴板里没有可粘贴的图片或文本");
 }
 
+function mobileInspectorPanelsFor(node) {
+  if (!node) return ["size"];
+  return node.kind === "image" ? ["size", "fill", "crop"] : ["size", "fill", "text"];
+}
+
+function updateMobileInspector(node) {
+  const panels = mobileInspectorPanelsFor(node);
+  if (!panels.includes(state.mobileInspectorPanel)) {
+    state.mobileInspectorPanel = panels[0];
+  }
+  document.querySelectorAll("[data-mobile-inspector]").forEach((button) => {
+    const panel = button.dataset.mobileInspector || "";
+    const available = panels.includes(panel);
+    button.classList.toggle("hidden", !available);
+    button.classList.toggle("active", state.mobileInspectorPanel === panel);
+  });
+  document.querySelectorAll("[data-mobile-inspector-panel]").forEach((panel) => {
+    panel.classList.toggle("active", panel.dataset.mobileInspectorPanel === state.mobileInspectorPanel);
+  });
+}
+
+function setMobileInspectorPanel(panel) {
+  state.mobileInspectorPanel = panel || "size";
+  updateInspector();
+}
+
 function updateInspector() {
   const inspector = document.querySelector(".inspector");
   const empty = document.querySelector(".inspector-empty");
@@ -2595,6 +2657,7 @@ function updateInspector() {
   height.value = Math.round(node.h).toString();
   const cropPanel = document.querySelector(".crop-panel");
   cropPanel.classList.toggle("hidden", node.kind !== "image");
+  updateMobileInspector(node);
 }
 
 function changeSelectedSize(axis, value) {
@@ -2809,6 +2872,7 @@ function installEventHandlers() {
       hideContextMenu();
       clearSelection();
       exitJumpModes();
+      setJumpPanelOpen(false);
       updateJumpPanel();
       queueRedraw();
     }
@@ -2886,6 +2950,11 @@ function installEventHandlers() {
     event.currentTarget.blur();
     setJumpBindingMode(!state.bindingJumpArea);
   });
+  document.querySelector("[data-jump-action='toggle-panel']")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.currentTarget.blur();
+    setJumpPanelOpen(!state.jumpPanelOpen);
+  });
   document.querySelector("[data-jump-action='clear']")?.addEventListener("click", (event) => {
     event.preventDefault();
     event.currentTarget.blur();
@@ -2913,6 +2982,9 @@ function installEventHandlers() {
   });
   document.querySelector("[data-inspector='height']").addEventListener("change", (event) => {
     changeSelectedSize("h", Number(event.target.value));
+  });
+  document.querySelectorAll("[data-mobile-inspector]").forEach((button) => {
+    button.addEventListener("click", () => setMobileInspectorPanel(button.dataset.mobileInspector || "size"));
   });
   document.querySelectorAll("[data-color]").forEach((button) => {
     button.addEventListener("click", () => changeSelectedColor(button.dataset.color || "#fffdf8"));

@@ -86,33 +86,45 @@
         <div class="inspector-empty">选择节点后可调颜色、尺寸和裁剪</div>
         <div class="inspector-content node-inspector hidden">
           <div class="panel-title">节点</div>
-          <label class="field">
-            <span>宽</span>
-            <input data-inspector="width" type="number" min="80" step="10" />
-          </label>
-          <label class="field">
-            <span>高</span>
-            <input data-inspector="height" type="number" min="56" step="10" />
-          </label>
-          <div class="swatch-label">背景</div>
-          <div class="swatches" aria-label="背景颜色">
-            <button data-color="#fffdf8" style="--swatch: #fffdf8" title="纸白"></button>
-            <button data-color="#e9f3ff" style="--swatch: #e9f3ff" title="蓝"></button>
-            <button data-color="#e9f8ef" style="--swatch: #e9f8ef" title="绿"></button>
-            <button data-color="#fff1cc" style="--swatch: #fff1cc" title="黄"></button>
-            <button data-color="#fdecef" style="--swatch: #fdecef" title="红"></button>
-            <button data-color="#f0edff" style="--swatch: #f0edff" title="紫"></button>
+          <div class="mobile-inspector-menu" aria-label="节点属性菜单">
+            <button class="active" data-mobile-inspector="size" type="button">尺寸</button>
+            <button data-mobile-inspector="fill" type="button">背景</button>
+            <button data-mobile-inspector="text" type="button">文字</button>
+            <button data-mobile-inspector="crop" type="button">裁剪</button>
           </div>
-          <div class="swatch-label">文字</div>
-          <div class="swatches" aria-label="文字颜色">
-            <button data-text-color="#26231f" style="--swatch: #26231f" title="深色"></button>
-            <button data-text-color="#5e5a51" style="--swatch: #5e5a51" title="灰色"></button>
-            <button data-text-color="#0f7887" style="--swatch: #0f7887" title="青色"></button>
-            <button data-text-color="#7ba86d" style="--swatch: #7ba86d" title="绿色"></button>
-            <button data-text-color="#ad7c19" style="--swatch: #ad7c19" title="黄色"></button>
-            <button data-text-color="#a12834" style="--swatch: #a12834" title="红色"></button>
+          <div class="inspector-section" data-mobile-inspector-panel="size">
+            <label class="field">
+              <span>宽</span>
+              <input data-inspector="width" type="number" min="80" step="10" />
+            </label>
+            <label class="field">
+              <span>高</span>
+              <input data-inspector="height" type="number" min="56" step="10" />
+            </label>
           </div>
-          <div class="crop-panel hidden">
+          <div class="inspector-section" data-mobile-inspector-panel="fill">
+            <div class="swatch-label">背景</div>
+            <div class="swatches" aria-label="背景颜色">
+              <button data-color="#fffdf8" style="--swatch: #fffdf8" title="纸白"></button>
+              <button data-color="#e9f3ff" style="--swatch: #e9f3ff" title="蓝"></button>
+              <button data-color="#e9f8ef" style="--swatch: #e9f8ef" title="绿"></button>
+              <button data-color="#fff1cc" style="--swatch: #fff1cc" title="黄"></button>
+              <button data-color="#fdecef" style="--swatch: #fdecef" title="红"></button>
+              <button data-color="#f0edff" style="--swatch: #f0edff" title="紫"></button>
+            </div>
+          </div>
+          <div class="inspector-section" data-mobile-inspector-panel="text">
+            <div class="swatch-label">文字</div>
+            <div class="swatches" aria-label="文字颜色">
+              <button data-text-color="#26231f" style="--swatch: #26231f" title="深色"></button>
+              <button data-text-color="#5e5a51" style="--swatch: #5e5a51" title="灰色"></button>
+              <button data-text-color="#0f7887" style="--swatch: #0f7887" title="青色"></button>
+              <button data-text-color="#7ba86d" style="--swatch: #7ba86d" title="绿色"></button>
+              <button data-text-color="#ad7c19" style="--swatch: #ad7c19" title="黄色"></button>
+              <button data-text-color="#a12834" style="--swatch: #a12834" title="红色"></button>
+            </div>
+          </div>
+          <div class="crop-panel inspector-section hidden" data-mobile-inspector-panel="crop">
             <div class="panel-title">裁剪</div>
             <p class="crop-help">点击左侧裁剪按钮后，拖动图片边框或角点裁剪。</p>
             <button class="wide-button" data-action="reset-crop">重置裁剪</button>
@@ -121,23 +133,28 @@
       </section>
 
       <section class="jump-panel" aria-label="区域跳转">
-        <div class="jump-header">
-          <span>区域</span>
-          <div class="jump-actions">
-            <button class="jump-bind" data-jump-action="bind" title="用最近一次框选区域绑定跳转格">绑定</button>
-            <button class="jump-clear" data-jump-action="clear" title="取消一个已绑定的跳转格">清除</button>
+        <button class="jump-toggle" data-jump-action="toggle-panel" type="button" title="区域跳转">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h4v4H5zM10 5h4v4h-4zM15 5h4v4h-4zM5 10h4v4H5zM10 10h4v4h-4zM15 10h4v4h-4zM5 15h4v4H5zM10 15h4v4h-4zM15 15h4v4h-4z" /></svg>
+        </button>
+        <div class="jump-content">
+          <div class="jump-header">
+            <span>区域</span>
+            <div class="jump-actions">
+              <button class="jump-bind" data-jump-action="bind" title="用最近一次框选区域绑定跳转格">绑定</button>
+              <button class="jump-clear" data-jump-action="clear" title="取消一个已绑定的跳转格">清除</button>
+            </div>
           </div>
-        </div>
-        <div class="jump-grid">
-          <button data-jump-slot="nw" title="左上">↖</button>
-          <button data-jump-slot="n" title="上">↑</button>
-          <button data-jump-slot="ne" title="右上">↗</button>
-          <button data-jump-slot="w" title="左">←</button>
-          <button data-jump-slot="c" title="中心">•</button>
-          <button data-jump-slot="e" title="右">→</button>
-          <button data-jump-slot="sw" title="左下">↙</button>
-          <button data-jump-slot="s" title="下">↓</button>
-          <button data-jump-slot="se" title="右下">↘</button>
+          <div class="jump-grid">
+            <button data-jump-slot="nw" title="左上">↖</button>
+            <button data-jump-slot="n" title="上">↑</button>
+            <button data-jump-slot="ne" title="右上">↗</button>
+            <button data-jump-slot="w" title="左">←</button>
+            <button data-jump-slot="c" title="中心">•</button>
+            <button data-jump-slot="e" title="右">→</button>
+            <button data-jump-slot="sw" title="左下">↙</button>
+            <button data-jump-slot="s" title="下">↓</button>
+            <button data-jump-slot="se" title="右下">↘</button>
+          </div>
         </div>
       </section>
 
