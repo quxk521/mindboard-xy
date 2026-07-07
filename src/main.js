@@ -37,6 +37,7 @@ const WEB_DB_VERSION = 1;
 const WEB_BOARD_STORE = "boards";
 const WEB_BOARD_KEY = "default";
 const JUMP_SLOTS = ["nw", "n", "ne", "w", "c", "e", "sw", "s", "se"];
+const MOBILE_LAYOUT_QUERY = "(hover: none), (pointer: coarse), (max-width: 760px)";
 
 const colors = {
   bg: "#f5f3ee",
@@ -281,8 +282,12 @@ function normalizeJumpAreas(input) {
   const areas = {};
   if (!input || typeof input !== "object") return areas;
   for (const slot of JUMP_SLOTS) {
-    const rect = normalizeRect(input[slot]);
-    if (usefulRect(rect)) areas[slot] = rect;
+    const raw = input[slot];
+    const rect = normalizeRect(raw);
+    if (usefulRect(rect)) {
+      const scale = Number(raw?.scale);
+      areas[slot] = Number.isFinite(scale) ? { ...rect, scale: clamp(scale, 0.12, 3.5) } : rect;
+    }
   }
   return areas;
 }
@@ -451,6 +456,10 @@ function screenPoint(event) {
   return { x: event.clientX - rect.left, y: event.clientY - rect.top };
 }
 
+function isMobileLayout() {
+  return window.matchMedia?.(MOBILE_LAYOUT_QUERY).matches || false;
+}
+
 function trackTouchPoint(event) {
   if (event.pointerType !== "touch") return;
   state.touchPoints.set(event.pointerId, screenPoint(event));
@@ -516,7 +525,7 @@ function updateTouchGesture() {
 }
 
 function shouldPanWithTouch(hit) {
-  return hit.type === "none" || hit.type === "edge" || hit.type === "group";
+  return hit.type === "none" || hit.type === "edge";
 }
 
 function nodeCenter(node) {
@@ -555,15 +564,25 @@ function pointInRect(point, rect) {
 }
 
 function visibleWorld() {
-  const topLeft = screenToWorld({ x: 0, y: 0 });
-  const bottomRight = screenToWorld({ x: canvas.clientWidth, y: canvas.clientHeight });
+  const rect = viewportWorldRect();
   const pad = 260 / state.board.view.scale;
   return {
-    x: topLeft.x - pad,
-    y: topLeft.y - pad,
-    w: bottomRight.x - topLeft.x + pad * 2,
-    h: bottomRight.y - topLeft.y + pad * 2
+    x: rect.x - pad,
+    y: rect.y - pad,
+    w: rect.w + pad * 2,
+    h: rect.h + pad * 2
   };
+}
+
+function viewportWorldRect() {
+  const topLeft = screenToWorld({ x: 0, y: 0 });
+  const bottomRight = screenToWorld({ x: canvas.clientWidth, y: canvas.clientHeight });
+  return normalizeRect({
+    x: topLeft.x,
+    y: topLeft.y,
+    w: bottomRight.x - topLeft.x,
+    h: bottomRight.y - topLeft.y
+  });
 }
 
 function setTool(tool) {
@@ -1456,7 +1475,7 @@ function drawMarqueeSelection() {
 }
 
 function drawJumpSelection() {
-  const rect = state.lastJumpSelection || (state.bindingJumpArea ? selectedContentBounds() : undefined);
+  const rect = state.bindingJumpArea ? currentBindableArea() : state.lastJumpSelection;
   if (!usefulRect(rect)) return;
   ctx.save();
   ctx.strokeStyle = state.bindingJumpArea ? "rgba(15, 120, 135, 0.82)" : "rgba(173, 124, 25, 0.72)";
@@ -1972,7 +1991,7 @@ function handlePointerUp(event) {
 
   if (pointer.type === "pan" && event.pointerType === "touch") {
     const moved = Math.hypot(screen.x - pointer.startScreen.x, screen.y - pointer.startScreen.y);
-    if ((pointer.touchHitType === "none" || pointer.touchHitType === "group") && !pointer.moved && moved <= TOUCH_TAP_MOVE_PX) {
+    if (pointer.touchHitType === "none" && !pointer.moved && moved <= TOUCH_TAP_MOVE_PX) {
       clearSelection();
       exitJumpModes();
       updateJumpPanel();
@@ -2252,7 +2271,13 @@ function selectedContentBounds() {
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 }
 
+function currentViewportBindableArea() {
+  const rect = viewportWorldRect();
+  return usefulRect(rect) ? { ...rect, scale: state.board.view.scale } : undefined;
+}
+
 function currentBindableArea() {
+  if (state.bindingJumpArea && isMobileLayout()) return currentViewportBindableArea();
   return state.lastJumpSelection || selectedContentBounds();
 }
 
@@ -2263,7 +2288,7 @@ function setLastJumpSelection(rect) {
 }
 
 function setJumpBindingMode(enabled) {
-  if (enabled && !usefulRect(currentBindableArea())) {
+  if (enabled && !isMobileLayout() && !usefulRect(currentBindableArea())) {
     showToast("先用鼠标框选一个区域");
     return;
   }
@@ -2343,6 +2368,14 @@ function jumpToArea(slot) {
 }
 
 function focusWorldRect(rect) {
+  if (Number.isFinite(rect.scale)) {
+    const scale = clamp(rect.scale, 0.12, 3.5);
+    state.board.view.scale = scale;
+    state.board.view.x = canvas.clientWidth / 2 - (rect.x + rect.w / 2) * scale;
+    state.board.view.y = canvas.clientHeight / 2 - (rect.y + rect.h / 2) * scale;
+    updateZoomReadout();
+    return;
+  }
   const width = Math.max(80, rect.w);
   const height = Math.max(80, rect.h);
   const scale = clamp(
