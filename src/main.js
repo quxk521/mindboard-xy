@@ -35,6 +35,7 @@ const WEB_DB_NAME = "mindboard-web";
 const WEB_DB_VERSION = 1;
 const WEB_BOARD_STORE = "boards";
 const WEB_BOARD_KEY = "default";
+const DEFAULT_BOARD_URL = "./0南大碎尸案.mindboard";
 const JUMP_SLOTS = ["nw", "n", "ne", "w", "c", "e", "sw", "s", "se"];
 
 const colors = {
@@ -82,6 +83,10 @@ function emptyBoard() {
   return { version: 2, view: { x: 0, y: 0, scale: 1, gridVisible: true }, nodes: [], edges: [], groups: [], jumpAreas: {} };
 }
 
+function hasBoardContent(board) {
+  return Boolean(board?.nodes?.length || board?.edges?.length || board?.groups?.length);
+}
+
 function idbRequest(request) {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
@@ -115,10 +120,21 @@ async function loadWebBoard() {
   const db = await openWebDb();
   if (db) {
     const board = await idbRequest(db.transaction(WEB_BOARD_STORE, "readonly").objectStore(WEB_BOARD_STORE).get(WEB_BOARD_KEY));
-    if (board) return board;
+    if (hasBoardContent(board)) return board;
   }
   const raw = localStorage.getItem(STORAGE_KEY);
-  return raw ? JSON.parse(raw) : emptyBoard();
+  if (raw) {
+    const board = JSON.parse(raw);
+    if (hasBoardContent(board)) return board;
+  }
+  try {
+    const response = await fetch(DEFAULT_BOARD_URL);
+    if (response.ok) return response.json();
+    console.warn(`Default board ${DEFAULT_BOARD_URL} returned ${response.status}.`);
+  } catch (error) {
+    console.warn("Could not load the default board; opening an empty board.", error);
+  }
+  return emptyBoard();
 }
 
 async function saveWebBoard(board) {

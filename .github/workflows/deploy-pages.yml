@@ -30,6 +30,7 @@ jobs:
         run: |
           mkdir -p _site
           cp -R index.html manifest.webmanifest sw.js .nojekyll icons src _site/
+          cp "0南大碎尸案.mindboard" _site/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
