@@ -1729,7 +1729,7 @@ function handlePointerDown(event) {
   if (event.pointerType === "touch" && hit.type === "handle" && !state.selectedNodes.has(hit.node.id)) {
     hit = { type: "node", node: hit.node };
   }
-  if (event.pointerType === "touch" && shouldPanWithTouch(hit)) {
+  if (event.pointerType === "touch" && state.tool !== "marquee" && shouldPanWithTouch(hit)) {
     state.pointer = {
       type: "pan",
       startScreen: screen,
@@ -2028,6 +2028,7 @@ function handlePointerUp(event) {
   }
   if (pointer.type === "marquee") {
     setLastJumpSelection(marqueeRect(pointer.startWorld, pointer.currentWorld));
+    if (state.tool === "marquee") setTool("select");
   }
   if (["drag-node", "drag-group", "resize-node", "crop-image", "marquee", "pan"].includes(pointer.type)) {
     scheduleSave();
@@ -2962,7 +2963,7 @@ function installEventHandlers() {
   document.querySelectorAll("[data-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = button.dataset.action || "";
-      if (["select", "text", "image", "link"].includes(action)) {
+      if (["select", "marquee", "text", "image", "link"].includes(action)) {
         if (action === "image") pickImages();
         else setTool(action);
       }
