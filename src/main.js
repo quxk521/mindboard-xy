@@ -59,6 +59,7 @@ const state = {
   selectedGroups: new Set(),
   mobileInspectorPanel: "size",
   lastJumpSelection: undefined,
+  jumpBindViewport: true,
   jumpPanelOpen: false,
   bindingJumpArea: false,
   clearingJumpArea: false,
@@ -2286,8 +2287,12 @@ function currentViewportBindableArea() {
   return usefulRect(rect) ? { ...rect, scale: state.board.view.scale } : undefined;
 }
 
+function usesViewportJumpBinding() {
+  return isMobileLayout() || state.jumpBindViewport;
+}
+
 function currentBindableArea() {
-  if (state.bindingJumpArea && isMobileLayout()) return currentViewportBindableArea();
+  if (state.bindingJumpArea && usesViewportJumpBinding()) return currentViewportBindableArea();
   return state.lastJumpSelection || selectedContentBounds();
 }
 
@@ -2298,7 +2303,7 @@ function setLastJumpSelection(rect) {
 }
 
 function setJumpBindingMode(enabled) {
-  if (enabled && !isMobileLayout() && !usefulRect(currentBindableArea())) {
+  if (enabled && !usesViewportJumpBinding() && !usefulRect(currentBindableArea())) {
     showToast("先用鼠标框选一个区域");
     return;
   }
@@ -2320,6 +2325,12 @@ function setJumpClearingMode(enabled) {
 function setJumpPanelOpen(open) {
   state.jumpPanelOpen = open;
   updateJumpPanel();
+}
+
+function toggleJumpBindSource() {
+  state.jumpBindViewport = !state.jumpBindViewport;
+  updateJumpPanel();
+  queueRedraw();
 }
 
 function bindJumpArea(slot) {
@@ -2401,12 +2412,24 @@ function focusWorldRect(rect) {
 
 function updateJumpPanel() {
   const panel = document.querySelector(".jump-panel");
+  const modeButton = document.querySelector("[data-jump-action='toggle-bind-source']");
   const bindButton = document.querySelector("[data-jump-action='bind']");
   const clearButton = document.querySelector("[data-jump-action='clear']");
+  const viewportBinding = usesViewportJumpBinding();
   const canBindArea = state.bindingJumpArea && usefulRect(currentBindableArea());
   const clearingMode = state.clearingJumpArea;
   panel?.classList.toggle("expanded", state.jumpPanelOpen || state.bindingJumpArea || state.clearingJumpArea);
+  if (modeButton) modeButton.textContent = viewportBinding ? "区域" : "选区";
+  modeButton?.setAttribute(
+    "title",
+    viewportBinding ? "当前模式：绑定当前屏幕显示区域，点击切换为框选区域" : "当前模式：绑定框选或选中区域，点击切换为当前屏幕"
+  );
+  modeButton?.setAttribute("aria-pressed", viewportBinding ? "true" : "false");
   bindButton?.classList.toggle("active", state.bindingJumpArea);
+  bindButton?.setAttribute(
+    "title",
+    viewportBinding ? "用当前屏幕显示区域绑定跳转格" : "用框选或选中区域绑定跳转格"
+  );
   clearButton?.classList.toggle("active", clearingMode);
   document.querySelectorAll("[data-jump-slot]").forEach((button) => {
     const slot = button.dataset.jumpSlot;
@@ -2998,6 +3021,11 @@ function installEventHandlers() {
     event.preventDefault();
     event.currentTarget.blur();
     setJumpPanelOpen(!state.jumpPanelOpen);
+  });
+  document.querySelector("[data-jump-action='toggle-bind-source']")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.currentTarget.blur();
+    toggleJumpBindSource();
   });
   document.querySelector("[data-jump-action='clear']")?.addEventListener("click", (event) => {
     event.preventDefault();

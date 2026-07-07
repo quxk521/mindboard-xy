@@ -230,9 +230,10 @@ textarea {
 }
 
 .jump-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 36px);
   align-items: center;
-  justify-content: space-between;
+  gap: 5px;
   margin-bottom: 8px;
   font-size: 12px;
   font-weight: 760;
@@ -240,14 +241,39 @@ textarea {
 }
 
 .jump-actions {
-  display: flex;
-  gap: 5px;
+  display: contents;
+}
+
+.jump-mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 24px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  color: #5e5a51;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 760;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+}
+
+.jump-mode:hover {
+  color: #0f5f6d;
+  background: #e9f3ff;
 }
 
 .jump-bind,
 .jump-clear {
+  width: 36px;
   height: 24px;
-  padding: 0 8px;
+  padding: 0;
   border: 0;
   border-radius: 7px;
   color: #2b2a27;
@@ -255,6 +281,8 @@ textarea {
   cursor: pointer;
   font-size: 12px;
   font-weight: 680;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
 }
 
 .jump-bind:hover,
@@ -669,18 +697,23 @@ textarea {
   }
 
   .jump-header {
+    grid-template-columns: repeat(3, 32px);
+    gap: 4px;
     margin-bottom: 6px;
     font-size: 11px;
   }
 
-  .jump-actions {
-    gap: 4px;
+  .jump-mode {
+    width: 32px;
+    height: 22px;
+    font-size: 11px;
   }
 
   .jump-bind,
   .jump-clear {
+    width: 32px;
     height: 22px;
-    padding: 0 6px;
+    padding: 0;
     font-size: 11px;
   }
 
@@ -845,6 +878,16 @@ textarea {
 
   .jump-panel.expanded {
     width: 118px;
+  }
+
+  .jump-header {
+    grid-template-columns: repeat(3, 30px);
+  }
+
+  .jump-mode,
+  .jump-bind,
+  .jump-clear {
+    width: 30px;
   }
 
   .jump-grid {
