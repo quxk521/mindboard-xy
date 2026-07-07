@@ -35,6 +35,9 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" stroke-dasharray="3 3" /><path d="M9 9h6v6H9z" /></svg>
         </button>
         <span class="rail-separator"></span>
+        <button class="tool-button danger" data-action="delete" title="删除">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" /></svg>
+        </button>
         <button class="tool-button enabled" data-action="toggle-grid" title="隐藏网格" aria-pressed="true">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16M8 4v16M16 4v16" /></svg>
         </button>
@@ -44,16 +47,9 @@
         <button class="tool-button" data-action="duplicate" title="复制节点">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" /></svg>
         </button>
-        <button class="tool-button danger" data-action="delete" title="删除">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" /></svg>
-        </button>
       </aside>
 
       <header class="topbar">
-        <div class="brand">
-          <span class="brand-mark"></span>
-          <span>MindBoard</span>
-        </div>
         <div class="top-actions">
           <button class="pill-button" data-action="undo" title="撤销 Ctrl+Z" disabled>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-1" /></svg>

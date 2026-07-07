@@ -399,7 +399,7 @@ function restoreBoardSnapshot(snapshot) {
     edgeEditor.style.display = "none";
     clearSelection();
     exitJumpModes();
-    state.lastJumpSelection = undefined;
+    clearJumpSelection();
     state.textCache.clear();
     updateZoomReadout();
     updateGridToggle();
@@ -640,6 +640,11 @@ function clearSelection() {
   if (state.tool === "crop") setTool("select");
   state.hoverCrop = undefined;
   updateInspector();
+}
+
+function clearJumpSelection() {
+  state.lastJumpSelection = undefined;
+  updateJumpPanel();
 }
 
 function selectOnlyEdge(edgeId) {
@@ -1997,6 +2002,7 @@ function handlePointerUp(event) {
     if (pointer.touchHitType === "none" && !pointer.moved && moved <= TOUCH_TAP_MOVE_PX) {
       clearSelection();
       exitJumpModes();
+      clearJumpSelection();
       updateJumpPanel();
       queueRedraw();
       return;
@@ -2909,6 +2915,7 @@ function installEventHandlers() {
       clearSelection();
       exitJumpModes();
       setJumpPanelOpen(false);
+      clearJumpSelection();
       updateJumpPanel();
       queueRedraw();
     }

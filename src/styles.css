@@ -153,7 +153,6 @@ textarea {
   pointer-events: none;
 }
 
-.brand,
 .top-actions {
   display: flex;
   align-items: center;
@@ -164,24 +163,6 @@ textarea {
   background: rgba(255, 255, 255, 0.86);
   box-shadow: 0 16px 40px rgba(31, 28, 23, 0.1);
   backdrop-filter: blur(18px);
-}
-
-.brand {
-  height: 42px;
-  padding: 0 14px;
-  font-weight: 680;
-  letter-spacing: 0;
-}
-
-.brand-mark {
-  width: 12px;
-  height: 12px;
-  border-radius: 4px;
-  background: #0f7887;
-  box-shadow:
-    8px 0 0 #dfb049,
-    0 8px 0 #7ba86d,
-    8px 8px 0 #c95d68;
 }
 
 .top-actions {
@@ -555,18 +536,6 @@ textarea {
     right: 10px;
     min-height: 40px;
     gap: 8px;
-  }
-
-  .brand {
-    width: 42px;
-    height: 40px;
-    padding: 0;
-    justify-content: center;
-    flex: 0 0 auto;
-  }
-
-  .brand span:last-child {
-    display: none;
   }
 
   .top-actions {
